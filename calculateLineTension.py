@@ -47,7 +47,7 @@ def main():
     # ---------------------------------------------------------------------------------------------------------
     # Track and Tag. This part preprocesses raw .tif data and identifies all valid domains according to hyperparameters
     # ---------------------------------------------------------------------------------------------------------
-    tif_path, _, tagged_save_path, idx_save_path  = trackAndTag.main()
+    tif_path, tagged_save_path, idx_save_path  = trackAndTag.main()
     image = Image.open(tagged_save_path)
     image.show()
     

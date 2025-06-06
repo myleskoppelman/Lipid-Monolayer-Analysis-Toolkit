@@ -233,13 +233,11 @@ def tagParticles(data_path: str, tif_path: str, save_path: str) -> None:
     """
     xls = pd.ExcelFile(data_path, engine="openpyxl")
     
-    path, filename = os.path.split(data_path)
-    nm, _ = os.path.splitext(filename)
-    new_data_path = os.path.join(path, f"{nm}_IDX.xlsx")
+
 
 
     data = []
-    with pd.ExcelWriter(new_data_path, engine='openpyxl') as writer:
+    with pd.ExcelWriter(data_path, engine='openpyxl') as writer:
         for n, sheet_name in enumerate(xls.sheet_names, start=1):
             df = pd.read_excel(xls, sheet_name=sheet_name)
             index_col = np.full((df.shape[0], 1), n)  # column of n's
@@ -283,7 +281,7 @@ def tagParticles(data_path: str, tif_path: str, save_path: str) -> None:
     
     print(f"Saved tagged image to: {save_path}")
     
-    return save_path, new_data_path
+    return save_path, data_path
     
     
 
@@ -328,7 +326,6 @@ def main():
     write_bin,
     adaptive_thresh, threshold_factor, slices, 
     bin_save_path, tracked_save_path) = getOptions.getOptions(s1,s2,s3)
-    
     
     
     
@@ -377,7 +374,7 @@ def main():
     
     tagged_save_path, idx_save_path = tagParticles(tracked_save_path, file_path, save_path)
     
-    return file_path, tracked_save_path, tagged_save_path, idx_save_path
+    return file_path, tagged_save_path, idx_save_path
     
     
     
