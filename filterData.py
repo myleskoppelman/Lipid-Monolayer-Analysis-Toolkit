@@ -72,7 +72,7 @@ def getSaveFiles(data_path, tif_path) -> tuple[str, str]:
     
     data_save_path = easygui.filesavebox(
         msg="Save Output .xlsx File",
-        default=os.path.join(p1, f"{name1}_FLTRD.xlsx"),
+        default=os.path.join(p1, f"{name1}_FLTR.xlsx"),
         filetypes=["*.xlsx"]
     )
     if not data_save_path:
@@ -83,7 +83,7 @@ def getSaveFiles(data_path, tif_path) -> tuple[str, str]:
     
     save_path = easygui.filesavebox(
         msg="Save Output .tif File",
-        default=os.path.join(p2, f"{name2}_FLTRD.tif"),
+        default=os.path.join(p2, f"{name2}_FLTR.tif"),
         filetypes=["*.tif"]
     )
     if not save_path:
@@ -170,6 +170,8 @@ def filterData(data_path, tif_path, filtered_data_path, filtered_tif_path):
         for sheet_name, df in filtered_excel.items():
             df.to_excel(writer, sheet_name=sheet_name, index=False)
     tifffile.imwrite(filtered_tif_path, tiff_filtered)
+    
+    print(f"Filtered Data saved to {filtered_tif_path}")
     
     return filtered_data_path, filtered_tif_path
     

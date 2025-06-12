@@ -95,7 +95,26 @@ def drawDomains(data_path, tif_path):
     dfs = [xls.parse(sheet) for sheet in xls.sheet_names]
     df_all = pd.concat(dfs, ignore_index=True)
     tif_stack = io.imread(tif_path).astype(np.uint8)
-    output_stack = np.full_like(tif_stack, fill_value=255, dtype=np.uint8)
+    
+    
+
+
+    df1 = dfs[0]
+    first_row = df1.iloc[0]
+    dc = int(first_row["Domain_Color"])
+
+    domain_color = 0
+    background_color = 255
+    
+    if dc == 0:
+        domain_color = 0
+        background_color = 255
+    else:
+        domain_color = 255
+        background_color = 0
+        
+        
+    output_stack = np.full_like(tif_stack, fill_value=background_color, dtype=np.uint8)
 
 
     # ----- Gap Tolerance. This program draws the desired domains from the centroid outwards, considering only similar colored pixels
@@ -124,10 +143,13 @@ def drawDomains(data_path, tif_path):
                     connected_mask = binary_dilation(connected_mask, footprint=selem)
 
 
-                    connected_mask &= (region_slice <= 50) 
-                output_slice = np.full(region_slice.shape, 255, dtype=np.uint8)
-                output_slice[connected_mask] = region_slice[connected_mask]
+                    if domain_color == 0:
+                            connected_mask &= (region_slice <= 50)
+                    else:
+                            connected_mask &= (region_slice >= 205)  
 
+                output_slice = np.full(region_slice.shape, background_color, dtype=np.uint8)
+                output_slice[connected_mask] = domain_color
                 output_stack[frame, minr:maxr, minc:maxc] = output_slice
 
     tifffile.imwrite(save_path, output_stack, photometric='minisblack')
@@ -141,8 +163,8 @@ def drawDomains(data_path, tif_path):
 
 
 def main():
-    data_path, tif_path, save_path = getFiles()
-    drawDomains(data_path, tif_path, save_path)
+    data_path, tif_path = getFiles()
+    drawDomains(data_path, tif_path)
     
     
 if __name__ == "__main__":

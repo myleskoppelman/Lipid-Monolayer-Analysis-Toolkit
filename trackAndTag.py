@@ -233,11 +233,13 @@ def tagParticles(data_path: str, tif_path: str, save_path: str) -> None:
     """
     xls = pd.ExcelFile(data_path, engine="openpyxl")
     
-
+    path, filename = os.path.split(data_path)
+    nm, _ = os.path.splitext(filename)
+    new_data_path = os.path.join(path, f"{nm}_TRACKED.xlsx")
 
 
     data = []
-    with pd.ExcelWriter(data_path, engine='openpyxl') as writer:
+    with pd.ExcelWriter(new_data_path, engine='openpyxl') as writer:
         for n, sheet_name in enumerate(xls.sheet_names, start=1):
             df = pd.read_excel(xls, sheet_name=sheet_name)
             index_col = np.full((df.shape[0], 1), n)  # column of n's
@@ -281,7 +283,7 @@ def tagParticles(data_path: str, tif_path: str, save_path: str) -> None:
     
     print(f"Saved tagged image to: {save_path}")
     
-    return save_path, data_path
+    return save_path, new_data_path
     
     
 
@@ -291,8 +293,8 @@ def main():
     # The settings can be changed here or when running the program
 
     # These settings affect the data, not the tracking
-    min_area = 100
-    max_area = 2000
+    min_area = 25
+    max_area = 500
     min_frames = 3
     max_eccentricity = 1.0
     max_area_variation = 1.0 # Decimal percentage only (0-whatever)
@@ -325,7 +327,7 @@ def main():
     max_areachange2, max_movement2, max_frameskip2,
     write_bin,
     adaptive_thresh, threshold_factor, slices, 
-    bin_save_path, tracked_save_path) = getOptions.getOptions(s1,s2,s3)
+    bin_save_path, data_save_path) = getOptions.getOptions(s1,s2,s3)
     
     
     
@@ -356,14 +358,14 @@ def main():
     filtered_particles = filterParticles(particles, max_area_variation, min_frames)
     
     
-    _, name = os.path.split(tracked_save_path)
+    _, name = os.path.split(data_save_path)
  
     try:
-        with pd.ExcelWriter(tracked_save_path, engine="openpyxl") as writer:
+        with pd.ExcelWriter(data_save_path, engine="openpyxl") as writer:
             for i, particle in enumerate(tqdm(filtered_particles, desc="Saving Particles", unit="particle")):
                 df = pd.DataFrame(particle, columns=[
                     "Area", "Centroid_X", "Centroid_Y", "Frame",
-                    "Eccentricity", "BBox_X", "BBox_Y", "BBox_W", "BBox_H", "Major_Axis", "Minor_Axis", "Orientation"
+                    "Eccentricity", "BBox_X", "BBox_Y", "BBox_W", "BBox_H", "Major_Axis", "Minor_Axis", "Orientation", "Domain_Color"
                 ])
                 sheet_name = f"Particle_{i}"
                 df.to_excel(writer, sheet_name=sheet_name, index=False)
@@ -372,9 +374,9 @@ def main():
         print("Failed to Track... No Domains found. Consider revising setting.")
         
     
-    tagged_save_path, idx_save_path = tagParticles(tracked_save_path, file_path, save_path)
+    tagged_save_path, tracked_save_path = tagParticles(data_save_path, file_path, save_path)
     
-    return file_path, tagged_save_path, idx_save_path
+    return file_path, tagged_save_path, tracked_save_path
     
     
     

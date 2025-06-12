@@ -29,7 +29,7 @@ def main():
 
     Contact:
     --------
-    Myles Koppelman (myleskoppelman@icloud.com)
+    Myles Koppelman (myleskoppelman@icloud.com) (koppe116@umn.edu)
     Project Repository: https://github.com/myleskoppelman/LineTension
 
     Example Usage:
@@ -84,7 +84,7 @@ def main():
     iso = False if isolate == "No" else True
 
     if iso:
-        iso_save_path = isolateDomains.drawDomains(filtered_data_path, filtered_tif_path, iso_save_path)
+        iso_save_path = isolateDomains.drawDomains(filtered_data_path, filtered_tif_path)
         
         image2 = Image.open(iso_save_path)
         image2.show()
@@ -116,7 +116,7 @@ def main():
     # ---------------------------------------------------------------------------------------------------------
     # Calculate Line Tension: Finally, the arc length and head radius is calculated to calculate the arclength.
     # ---------------------------------------------------------------------------------------------------------
-    lt_data_path, lt_save_path = lineTension.getSaveFiles(final_tif_path)
+    lt_save_path, lt_data_path = lineTension.getSaveFiles(final_tif_path)
     lineTension.lineTension(final_data_path, final_tif_path, lt_save_path, lt_data_path)
     
     image3 = Image.open(lt_save_path)

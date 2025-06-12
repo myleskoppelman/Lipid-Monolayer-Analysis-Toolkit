@@ -169,6 +169,7 @@ def drawEllipses(data_path, tif_path, save_path, poly_funcs=None):
         for frame, poly_func in enumerate(poly_funcs):
             if frame >= tif_stack.shape[0]:
                 continue
+ 
 
             img = tif_stack[frame]
             x_vals = np.linspace(0, img.shape[1] - 1, img.shape[1])

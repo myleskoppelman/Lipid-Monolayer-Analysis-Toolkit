@@ -158,18 +158,18 @@ def lineTension(data_path, tif_path, save_path, data_save_path):
         head = int(settings[0])
         scale = float(settings[1])
         fps = float(settings[2])
-        viscosity = float(settings[3])
+        viscosity = float(settings[3]) # Pascal Seconds or Newtons per Meter^2
     except ValueError:
         raise ValueError("Invalid input. Make sure to enter numbers.")
 
     pixel_size = 1e-6 / scale
 
     # Get data
-    arc_lengths, poly_funcs = arcLength(tif_path) # get arclength of bola
-    _, majors, minors = fitEllipse(data_path, tif_path, head) # Get major/minor axis of head of bola
+    arc_lengths, poly_funcs = arcLength( tif_path) # get arclength of bola
+    _, majors, minors = fitEllipse(data_path, tif_path, head) # Get major/minor axis of head of bola in 
 
-    arc_lengths = np.array(arc_lengths) * pixel_size # scale data to microns
-    majors = np.array(majors) * pixel_size
+    arc_lengths = np.array(arc_lengths) * pixel_size # scale data
+    majors = np.array(majors) * pixel_size 
     minors = np.array(minors) * pixel_size
 
     x1 = np.arange(len(arc_lengths)) / fps # scale time axis 
@@ -184,7 +184,7 @@ def lineTension(data_path, tif_path, save_path, data_save_path):
 
     dL_dt = poly.deriv() # take derivative of the fit to find change in arc length over time
     f = 8
-    line_tension = f * viscosity * dL_dt * a # calculate line tension
+    line_tension = f * viscosity * dL_dt * a # calculate line tension 
     line_tension = np.array(line_tension)
 
     center = np.median(line_tension) # calculate median line tension
@@ -198,7 +198,7 @@ def lineTension(data_path, tif_path, save_path, data_save_path):
 
     drawEllipses(data_path, tif_path, save_path, poly_funcs) # draw arc length and radial ellipses
 
-    print(f"\n\nWeighted Average Line Tension: {lt2}\nMedian Line Tension: {center}\n\n")
+    print(f"\n\nWeighted Average Line Tension: {lt2} Newtons\nMedian Line Tension: {center} Newtons\n\n")
    
 
     # Plot 1: Arc lengths

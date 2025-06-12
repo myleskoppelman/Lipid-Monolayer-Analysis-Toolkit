@@ -97,7 +97,7 @@ def tagParticles(data_path: str, tif_path: str, save_path: str) -> None:
     
     path, filename = os.path.split(data_path)
     nm, _ = os.path.splitext(filename)
-    new_data_path = os.path.join(path, f"{nm}_IDX.xlsx")
+    new_data_path = os.path.join(path, f"{nm}_TRACKED.xlsx")
 
 
     data = []

@@ -118,9 +118,13 @@ def trackParticles(data, max_areachange, max_movement, max_frameskip, xm=None, y
     particles = [] 
     
     if xm is None or ym is None:
-        max_frame = int(np.max(data[:, 3]))
-        xm = np.zeros(max_frame + 1)
-        ym = np.zeros(max_frame + 1)
+        try:
+            max_frame = int(np.max(data[:, 3]))
+            xm = np.zeros(max_frame + 1)
+            ym = np.zeros(max_frame + 1)
+        except ValueError:
+            xm = 1
+            ym = 1
 
     n = -1  # track index
     u = 1   # for progress tracking
@@ -213,9 +217,9 @@ def main():
     # The settings can be changed here or when running the program
 
     # These settings affect the data, not the tracking
-    min_area = 10
-    max_area = 1000
-    min_frames = 3
+    min_area = 200
+    max_area = 2000000
+    min_frames = 1
     max_eccentricity = 1.0
     max_area_variation = 1.0 # Decimal percentage only (0-whatever)
 
@@ -223,16 +227,16 @@ def main():
     # values flexible for the first track but tighten them during the
     # iteration.
     threshold_factor = 1.0 
-    max_areachange = 2 # Decimal percentage only (0-1)
+    max_areachange = 0.8 # Decimal percentage only (0-1)
     max_movement = 100
-    max_frameskip = 3
+    max_frameskip = 0
 
 
     # These are for the iteration. You want to keep the allowed movement low
     # because the program already is guessing where the particle should be.
-    max_areachange2 = 2 # Percentages only
+    max_areachange2 = 0.8 # Percentages only
     max_movement2 = 50
-    max_frameskip2 = 3
+    max_frameskip2 = 0
     # -------------------------------------------------------------------------
     
     
@@ -251,15 +255,17 @@ def main():
     
     
     data = preProcess.preProcess(file_path, binary, domain_color, border, max_eccentricity, min_area, write_bin, adaptive_thresh, threshold_factor, slices, bin_save_path)
-    filtered_data = removeParticles(data, min_area, max_area, max_eccentricity)
-    filtered_data_copy = filtered_data.copy()
+    # filtered_data = removeParticles(data, min_area, max_area, max_eccentricity)
+    # filtered_data_copy = filtered_data.copy()
+    filtered_data = data
     particles = trackParticles(filtered_data, max_areachange, max_movement, max_frameskip, None, None)
     
-    n_frames = int(np.max(data[:,4]))
+    # n_frames = int(np.max(data[:,4]))
     
-    dx, dy = averageDisplacement.average(particles, n_frames)
-    particles = trackParticles(filtered_data_copy, max_areachange2, max_movement2, max_frameskip2, dx, dy)
-    filtered_particles = filterParticles(particles, max_area_variation, min_frames)
+    # dx, dy = averageDisplacement.average(particles, n_frames)
+    # particles = trackParticles(filtered_data_copy, max_areachange2, max_movement2, max_frameskip2, dx, dy)
+    # filtered_particles = filterParticles(particles, max_area_variation, min_frames)
+    filtered_particles = particles
     
     
     _, name = os.path.split(tracked_save_path)
@@ -269,9 +275,9 @@ def main():
             for i, particle in enumerate(tqdm(filtered_particles, desc="Saving Particles", unit="particle")):
                 df = pd.DataFrame(particle, columns=[
                     "Area", "Centroid_X", "Centroid_Y", "Frame",
-                    "Eccentricity", "BBox_X", "BBox_Y", "BBox_W", "BBox_H", "Major_Axis", "Minor_Axis", "Orientation"
+                    "Eccentricity", "BBox_X", "BBox_Y", "BBox_W", "BBox_H", "Major_Axis", "Minor_Axis", "Orientation", "Domain_Color"
                 ])
-                sheet_name = f"Particle_{i}"
+                sheet_name = f"Particle_{i+1}"
                 df.to_excel(writer, sheet_name=sheet_name, index=False)
         print(f"\nSaved {len(filtered_particles)} particles to {name}")
     except IndexError:

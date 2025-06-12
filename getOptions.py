@@ -262,7 +262,7 @@ def getOptions(s1, s2, s3):
     # ---------------------------------------------------------------------------------------------------------
     if write_binary_img:
         binary_save_path = easygui.filesavebox(
-            msg="Save Output File",
+            msg="Save Output .tif File",
             default=os.path.join(p, f"{nm}_BINARY.tif"),
             filetypes=["*.tif"]
         )
@@ -271,8 +271,8 @@ def getOptions(s1, s2, s3):
         
 
     data_save_path = easygui.filesavebox(
-        msg="Save Output File",
-        default=os.path.join(p, f"{nm}_TRACKED.xlsx"),
+        msg="Save Output .xlsx File",
+        default=os.path.join(p, f"{nm}.xlsx"),
         filetypes=["*.xlsx"]
     )
     if not data_save_path:

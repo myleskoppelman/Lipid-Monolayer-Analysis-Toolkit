@@ -119,7 +119,7 @@ def preProcess(file_path, is_bin, domain_color, border, max_eccentricity, min_ar
 
         if num > 0:  # [Area, CentroidX, CentroidY, Frame#, Eccentricity, BoundingBoxX, BoundingBoxY, BoundingBoxW, BoundingBoxH]
             props = regionprops(labeled)
-            m = np.zeros((len(props), 12))
+            m = np.zeros((len(props), 13))
 
             m[:, 0] = [p.area for p in props]
             m[:, 1] = [p.centroid[1] for p in props]
@@ -137,6 +137,7 @@ def preProcess(file_path, is_bin, domain_color, border, max_eccentricity, min_ar
                 m[i, 9] = p.major_axis_length
                 m[i, 10] = p.minor_axis_length
                 m[i, 11] = p.orientation  # In radians
+                m[i, 12] = 0 if domain_color == 0 else 255
 
             eccentricities.extend(m[:, 4])
             output_data.extend(m.tolist())
