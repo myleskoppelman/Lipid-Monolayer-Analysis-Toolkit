@@ -17,7 +17,7 @@ def getFiles() -> tuple[str, str]:
     -------
     tuple of str
         A tuple containing:
-        - data_path: Path to the selected Excel data file (.xlsx).
+        - xlsx_path: Path to the selected Excel data file (.xlsx).
         - tif_path: Path to the selected binary .tif file.
 
 
@@ -26,12 +26,12 @@ def getFiles() -> tuple[str, str]:
     Exception
         If the user does not select a file in any of the dialogs.
     """
-    data_path = easygui.fileopenbox(
+    xlsx_path = easygui.fileopenbox(
         msg="Select Particle Tracking Data",
         default="Data#",
         filetypes=["*.xlsx"]
     )
-    if not data_path:
+    if not xlsx_path:
         raise Exception("No file selected.")
 
     
@@ -44,18 +44,18 @@ def getFiles() -> tuple[str, str]:
     if not tif_path:
         raise Exception("No file selected.")
     
-    return data_path, tif_path
+    return xlsx_path, tif_path
 
 
 
-def drawDomains(data_path, tif_path):
+def drawDomains(xlsx_path, tif_path):
     """
     Draws domains for the specified particles in a multi-page TIFF stack by performing a flood-fill segmentation
     for each region (domain) specified in the provided Excel file.
 
     Parameters:
     ----------
-    data_path : str
+    xlsx_path : str
         Path to the Excel file containing region properties for particles. It must have sheets with columns
         'Frame', 'BBox_X', 'BBox_Y', 'BBox_W', 'BBox_H', 'Centroid_X', and 'Centroid_Y' for each region.
     tif_path : str
@@ -77,21 +77,21 @@ def drawDomains(data_path, tif_path):
     path, filename = os.path.split(tif_path)
     nm, _ = os.path.splitext(filename)
     
-    save_path = easygui.filesavebox(
+    tif_save_path = easygui.filesavebox(
         msg="Save Output .tif File",
         default=os.path.join(path, f"{nm}_ISO.tif"),
         filetypes=["*.tif"]
     )
-    if not save_path:
+    if not tif_save_path:
         raise Exception("No output file selected.")
     
-    if save_path is not None and not save_path.lower().endswith('.tif'):
-        save_path += '.tif'
+    if tif_save_path is not None and not tif_save_path.lower().endswith('.tif'):
+        tif_save_path += '.tif'
 
 
 
     # ----- Open input files
-    xls = pd.ExcelFile(data_path, engine="openpyxl")
+    xls = pd.ExcelFile(xlsx_path, engine="openpyxl")
     dfs = [xls.parse(sheet) for sheet in xls.sheet_names]
     df_all = pd.concat(dfs, ignore_index=True)
     tif_stack = io.imread(tif_path).astype(np.uint8)
@@ -152,10 +152,10 @@ def drawDomains(data_path, tif_path):
                 output_slice[connected_mask] = domain_color
                 output_stack[frame, minr:maxr, minc:maxc] = output_slice
 
-    tifffile.imwrite(save_path, output_stack, photometric='minisblack')
-    print(f"Saved Domains to: {save_path}")
+    tifffile.imwrite(tif_save_path, output_stack, photometric='minisblack')
+    print(f"Saved Domains to: {tif_save_path}")
     
-    return save_path
+    return tif_save_path
 
 
 
@@ -163,8 +163,8 @@ def drawDomains(data_path, tif_path):
 
 
 def main():
-    data_path, tif_path = getFiles()
-    drawDomains(data_path, tif_path)
+    xlsx_path, tif_path = getFiles()
+    drawDomains(xlsx_path, tif_path)
     
     
 if __name__ == "__main__":

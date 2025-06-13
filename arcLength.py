@@ -1,19 +1,16 @@
 import numpy as np
 import  os
 from tqdm import tqdm
+import pandas as pd
 from skimage import io
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-from sympy import symbols, diff, sqrt, integrate
-from sympy import lambdify
-from sympy.abc import x
-from sympy import N as sympy_evalf
-import sympy as sp
 from scipy.integrate import quad
+from skimage.draw import line, ellipse_perimeter, ellipse
 
 ''' [arcLength.py] Last Updated: 6/6/2025 by Myles Koppelman '''
 
-def arcLength(tif_path):
+def arcLength(xlsx_path, tif_path, head):
     """
     Calculates the arc length of black (zero-valued) domains in each frame of a multi-page TIFF stack
     by fitting a polynomial curve to the domain coordinates.
@@ -53,26 +50,90 @@ def arcLength(tif_path):
 
     arc_lengths = []
     poly_funcs = []
+    
+    
+    xls = pd.ExcelFile(xlsx_path, engine="openpyxl")
+    
+    
+    
+
+    for sheet in xls.sheet_names:
+        df = xls.parse(sheet)
+        if 'Index' in df.columns and (df['Index'] == head).any():
+            df1 = df  
+            break
+    else:
+        raise ValueError("No head located in xlsx file...")
+            
 
 
     with PdfPages(os.path.join(path, f"{name}_ARCLEN.pdf")) as pdf:
         for i, img in enumerate(tqdm(tif_stack, desc="Fitting Arc Length")):
+            row = df1.loc[i]
+            domain_color = row['Domain_Color']
+            cx = row['Centroid_X']
+            cy = row['Centroid_Y']
+            a = row["Major_Axis"] / 2
+            b = row["Minor_Axis"] / 2
+            orientation = row['Orientation']
+            orientation = -(orientation + np.pi / 2)
             frame_array = np.array(img)
-            rows, cols = np.where(frame_array == 0)  # black pixel coordinates (j = rows, k = cols)
+            
+            rs, cs = np.where(frame_array == domain_color)  # black pixel coordinates (j = rows, k = cols)
+            
+            if domain_color == 255:
+                background_color = 0
+            else:
+                background_color = 255
+            
+        
+            rr, cc = ellipse(
+                int(round(cy)),
+                int(round(cx)),
+                int(round(b + 10)),
+                int(round(a + 10)),
+                rotation=orientation,
+                shape=img.shape
+            )
+            
+           
+            x0_major = cx - (a * np.cos(orientation))
+            y0_major = cy - (a * np.sin(orientation))
+            x1_major = cx + (a * np.cos(orientation))
+            y1_major = cy + (a * np.sin(orientation))
+            rr_major, cc_major = line(int(round(y0_major)), int(round(x0_major)), int(round(y1_major)), int(round(x1_major)))
+            
+            ellipse_set = set(zip(rr, cc))
+            major_axis_set = set(zip(rr_major, cc_major))
 
-            if len(cols) < 2:  # skip if insufficient points
+            output_array = frame_array.copy()
+            
+            for r, c in zip(rs, cs):
+                if (r, c) in ellipse_set and (r, c) not in major_axis_set:
+                    output_array[r, c] = background_color 
+                else:
+                    pass
+
+           
+            rows, cols = np.where(output_array == domain_color)
+            
+            
+            if len(cols) < 2: 
                 arc_lengths.append(0)
                 poly_funcs.append(None)
                 continue
-
-            # Fit 2nd-degree polynomial: y = ax^2 + bx + c
-            sorted_indices = np.argsort(cols)
-            x_sorted = cols[sorted_indices]
-            y_sorted = rows[sorted_indices]
-
-            coeffs = np.polyfit(x_sorted, y_sorted, 2)
-            poly_func = np.poly1d(coeffs)
             
+            
+            
+            sorted_indices = np.argsort(cols)
+            x_data = cols[sorted_indices]
+            y_data = rows[sorted_indices]
+            
+ 
+
+            coeffs = np.polyfit(x_data, y_data, 2)
+            poly_func = np.poly1d(coeffs)
+
             
             a, b, c = coeffs            
 
@@ -83,20 +144,21 @@ def arcLength(tif_path):
             def arc_length_integrand(x):
                 return np.sqrt(1 + poly_derivative(x)**2)
 
-            x_min = x_sorted.min()
-            x_max = x_sorted.max()
+            x_min = x_data.min()
+            x_max = x_data.max()
 
             arc_length_eval, err = quad(arc_length_integrand, x_min, x_max)
+            if x_min == x_max:
+                arc_length_eval, err = quad(arc_length_integrand, y_data.min(), y_data.max())
 
-
-            x_fine = np.linspace(x_sorted.min(), x_sorted.max(), 1000)
+            x_fine = np.linspace(x_data.min(), x_data.max(), 1000)
             y_fine = poly_func(x_fine)
 
-            plt.scatter(x_sorted, y_sorted, s=5, label='Domains')
+            plt.scatter(x_data, y_data, s=5, label='Domains')
             plt.plot(x_fine, y_fine, 'r-', label='Arc Length')
             plt.gca().invert_yaxis()
             plt.legend()
-            plt.title(f"Frame {i} | Arc Length: {arc_length_eval:.3f}")
+            plt.title(f"Frame {i+1} | Arc Length: {arc_length_eval:.3f}")
             pdf.savefig()
             plt.close()
 
@@ -121,7 +183,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 [arcLength.py] Last Updated: 6/6/2025 by Myles Koppelman
 
-def arcLength(data_path, tif_path, head):
+def arcLength(xlsx_path, tif_path, head):
     """
     Calculates the arc length of black (zero-valued) domains in each frame of a multi-page TIFF stack
     by fitting a polynomial curve to the domain coordinates.
@@ -162,7 +224,7 @@ def arcLength(data_path, tif_path, head):
     arc_lengths = []
     poly_funcs = []
 
-    xls = pd.ExcelFile(data_path, engine="openpyxl")
+    xls = pd.ExcelFile(xlsx_path, engine="openpyxl")
     
 
     for sheet in xls.sheet_names:

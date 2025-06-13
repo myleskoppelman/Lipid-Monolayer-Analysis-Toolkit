@@ -208,7 +208,7 @@ def trackParticles(data, max_areachange, max_movement, max_frameskip, xm=None, y
 
 
 
-def tagParticles(data_path: str, tif_path: str, save_path: str) -> None:
+def tagParticles(data_path: str, tif_path: str, tagged_tif_path: str) -> None:
     """
     Tags particles in a multi-frame .tif image using data from an Excel file, and saves
     the output as a new .tif file with particle indices overlaid on each frame.
@@ -220,7 +220,7 @@ def tagParticles(data_path: str, tif_path: str, save_path: str) -> None:
         should correspond to a particle with at least columns: [area, x, y, frame].
     tif_path : str
         Path to the input binary .tif file (multi-frame image).
-    save_path : str
+    tagged_tif_path : str
         Path to save the output .tif file with particles tagged.
 
     Notes
@@ -278,12 +278,12 @@ def tagParticles(data_path: str, tif_path: str, save_path: str) -> None:
 
 
     output_frames[0].save(
-        save_path, save_all=True, append_images=output_frames[1:]
+        tagged_tif_path, save_all=True, append_images=output_frames[1:]
     )
     
-    print(f"Saved tagged image to: {save_path}")
+    print(f"Saved tagged image to: {tagged_tif_path}")
     
-    return save_path, new_data_path
+    return tagged_tif_path, new_data_path
     
     
 
@@ -320,33 +320,33 @@ def main():
     s2 = [str(max_areachange), str(max_movement), str(max_frameskip)]
     s3 = [str(max_areachange2), str(max_movement2), str(max_frameskip2)]
 
-    (file_path, 
+    (tif_path, 
     binary, domain_color, border,
     max_eccentricity, min_area, max_area, min_frames, max_area_variation, 
     max_areachange, max_movement, max_frameskip,
     max_areachange2, max_movement2, max_frameskip2,
     write_bin,
     adaptive_thresh, threshold_factor, slices, 
-    bin_save_path, data_save_path) = getOptions.getOptions(s1,s2,s3)
+    bin_save_path, xlsx_save_path) = getOptions.getOptions(s1,s2,s3)
     
     
     
-    path, filename = os.path.split(file_path)
+    path, filename = os.path.split(tif_path)
     name, _ = os.path.splitext(filename)
     
-    save_path = easygui.filesavebox(
+    tagged_tif_path = easygui.filesavebox(
         msg="Save Output .tif File",
         default=os.path.join(path, f"{name}_TAGGED.tif"),
         filetypes=["*.tif"]
     )
-    if not save_path:
+    if not tagged_tif_path:
         raise Exception("No output file selected.")
     
-    if save_path is not None and not save_path.lower().endswith('.tif'):
-        save_path += '.tif'
+    if tagged_tif_path is not None and not tagged_tif_path.lower().endswith('.tif'):
+        tagged_tif_path += '.tif'
     
     
-    data = preProcess.preProcess(file_path, binary, domain_color, border, max_eccentricity, min_area, write_bin, adaptive_thresh, threshold_factor, slices, bin_save_path)
+    data = preProcess.preProcess(tif_path, binary, domain_color, border, max_eccentricity, min_area, write_bin, adaptive_thresh, threshold_factor, slices, bin_save_path)
     filtered_data = removeParticles(data, min_area, max_area, max_eccentricity)
     filtered_data_copy = filtered_data.copy()
     particles = trackParticles(filtered_data, max_areachange, max_movement, max_frameskip, None, None)
@@ -358,10 +358,10 @@ def main():
     filtered_particles = filterParticles(particles, max_area_variation, min_frames)
     
     
-    _, name = os.path.split(data_save_path)
+    _, name = os.path.split(xlsx_save_path)
  
     try:
-        with pd.ExcelWriter(data_save_path, engine="openpyxl") as writer:
+        with pd.ExcelWriter(xlsx_save_path, engine="openpyxl") as writer:
             for i, particle in enumerate(tqdm(filtered_particles, desc="Saving Particles", unit="particle")):
                 df = pd.DataFrame(particle, columns=[
                     "Area", "Centroid_X", "Centroid_Y", "Frame",
@@ -374,9 +374,9 @@ def main():
         print("Failed to Track... No Domains found. Consider revising setting.")
         
     
-    tagged_save_path, tracked_save_path = tagParticles(data_save_path, file_path, save_path)
+    tagged_tif_path, tracked_xlsx_path = tagParticles(xlsx_save_path, tif_path, tagged_tif_path)
     
-    return file_path, tagged_save_path, tracked_save_path
+    return tif_path, tagged_tif_path, tracked_xlsx_path
     
     
     

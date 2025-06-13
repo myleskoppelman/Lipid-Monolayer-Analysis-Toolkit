@@ -152,7 +152,7 @@ def lineTension(data_path, tif_path, save_path, data_save_path):
         msg="Enter index of the 'head' of the bola, pixel size, frames per seconds, and subsurface viscosity.",
         title="Settings",
         fields=["Head Index: ", "Microns per Pixel", "Frames per Second", "Subsurface Viscosity"],
-        values= ["1", "4.5", "20", "0.01"]
+        values= ["1", "0.2222", "20", "0.01"]
     )
     try:
         head = int(settings[0])
@@ -162,10 +162,10 @@ def lineTension(data_path, tif_path, save_path, data_save_path):
     except ValueError:
         raise ValueError("Invalid input. Make sure to enter numbers.")
 
-    pixel_size = 1e-6 / scale
+    pixel_size = 1e-6 * scale
 
     # Get data
-    arc_lengths, poly_funcs = arcLength( tif_path) # get arclength of bola
+    arc_lengths, poly_funcs = arcLength(data_path, tif_path, head) # get arclength of bola
     _, majors, minors = fitEllipse(data_path, tif_path, head) # Get major/minor axis of head of bola in 
 
     arc_lengths = np.array(arc_lengths) * pixel_size # scale data
