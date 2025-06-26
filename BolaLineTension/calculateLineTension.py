@@ -28,6 +28,7 @@ def main():
     - For more detailed instruction, see README.md
 
     Contact:
+    
     --------
     Myles Koppelman (myleskoppelman@icloud.com) (koppe116@umn.edu)
     Project Repository: https://github.com/myleskoppelman/LineTension

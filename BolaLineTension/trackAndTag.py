@@ -293,8 +293,8 @@ def main():
     # The settings can be changed here or when running the program
 
     # These settings affect the data, not the tracking
-    min_area = 25
-    max_area = 500
+    min_area = 5
+    max_area = 1500
     min_frames = 3
     max_eccentricity = 1.0
     max_area_variation = 1.0 # Decimal percentage only (0-whatever)
