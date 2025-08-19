@@ -11,11 +11,15 @@ To avoid issues, it is recommended to use **Anaconda**, which allows you to mana
 ## Quick Start (One Command)
 
 ### macOS / Linux
-Open a terminal and run:
+Open a terminal and run (you can change 'domain-env' to any name you'd like for your virtual environment):
 
 ```bash
-conda create -n domain-env python=3.12 -y && conda activate domain-env && \
-conda install -y \ numpy=1.26.4 \ pandas \ matplotlib \ scikit-image \ tifffile \ openpyxl \ imageio \ pyarrow \ scipy \ bottleneck \ tqdm \ pillow \ ipykernel \ seaborn && \
+conda create -n domain-env python=3.12 -y
+&& \
+conda activate domain-env
+&& \
+conda install -y \ numpy=1.26.4 \ pandas \ matplotlib \ scikit-image \ tifffile \ openpyxl \ imageio \ pyarrow \ scipy \ bottleneck \ tqdm \ pillow \ ipykernel \ seaborn
+&& \
 pip install easygui==0.98.3 matplotlib==3.10.5
 ```
 
@@ -23,8 +27,12 @@ Windows
 Open Anaconda Prompt (not Command Prompt) and run:
 
 ```bash
-conda create -n domain-env python=3.12 -y && conda activate domain-env && ^
-conda install -y numpy=1.26.4 pandas openpyxl tifffile scikit-image matplotlib tqdm scipy pillow ipykernel seaborn && ^
+conda create -n domain-env python=3.12 -y
+&&
+conda activate domain-env
+&& ^
+conda install -y numpy=1.26.4 pandas openpyxl tifffile scikit-image matplotlib tqdm scipy pillow ipykernel seaborn
+&& ^
 pip install easygui==0.98.3 matplotlib==3.10.5
 ```
 Once the environment is set up, you can run any of the provided programs.
