@@ -1,14 +1,13 @@
-import easygui, os, trackAndTag, lineTension, isolateDomains, filterData
-from PIL import Image
+import easygui, os, bolaLineTension, isolateDomains, filterData, trackAndTagComplete
 
-''' [filterData.py] Last Updated: 6/6/2025 by Myles Koppelman '''
+''' [calculateLineTension.py] Last Updated: 8/8/2025 by Myles Koppelman '''
 
 def main():
     """
     Master script for calculating the line tension of a bola domain structure from a raw .tif video stack.
 
     This function acts as a pipeline integrating multiple modules:
-    - trackAndTag.py: Tracks and tags domain features.
+    - trackAndTagComplete.py: Tracks and tags domain features.
     - filterData.py: Filters data to remove undesired frames/domains.
     - isolateDomains.py: Isolates the bola from other domains.
     - arcLength.py: Calculates the arclength of the bola strip.
@@ -28,7 +27,6 @@ def main():
     - For more detailed instruction, see README.md
 
     Contact:
-    
     --------
     Myles Koppelman (myleskoppelman@icloud.com) (koppe116@umn.edu)
     Project Repository: https://github.com/myleskoppelman/LineTension
@@ -48,9 +46,8 @@ def main():
     # ---------------------------------------------------------------------------------------------------------
     # Track and Tag. This part preprocesses raw .tif data and identifies all valid domains according to hyperparameters
     # ---------------------------------------------------------------------------------------------------------
-    tif_path, tagged_save_path, idx_save_path  = trackAndTag.main()
-    image = Image.open(tagged_save_path)
-    image.show()
+    tif_path, tagged_save_path, idx_save_path  = trackAndTagComplete.main()
+    os.system(f"open '{tagged_save_path}'")
     
     
     # ---------------------------------------------------------------------------------------------------------
@@ -87,8 +84,7 @@ def main():
     if iso:
         iso_save_path = isolateDomains.drawDomains(filtered_data_path, filtered_tif_path)
         
-        image2 = Image.open(iso_save_path)
-        image2.show()
+        os.system(f"open '{iso_save_path}'")
         
         filtr = easygui.buttonbox(
             msg="Does the data need to be filtered again?\n\n!!!NOTE: The 'head' and 'base' domain must track continuously throught the video. If they do not, quit the program and retrack with different settings. Try adjusting 'frameskip' and 'max area variation' parameters if domains do not track continuously!!!\n\nIf your video contains more domains than only the 'head' and 'base' domain, select yes.\nIf there are any frames that don't contain both the 'head' and 'base domain(other than when they merge), select yes.",
@@ -117,13 +113,11 @@ def main():
     # ---------------------------------------------------------------------------------------------------------
     # Calculate Line Tension: Finally, the arc length and head radius is calculated to calculate the arclength.
     # ---------------------------------------------------------------------------------------------------------
-    lt_save_path, lt_data_path = lineTension.getSaveFiles(final_tif_path)
-    lineTension.lineTension(final_data_path, final_tif_path, lt_save_path, lt_data_path)
+    lt_save_path, lt_data_path = bolaLineTension.getSaveFiles(final_tif_path)
+    bolaLineTension.lineTension(final_data_path, final_tif_path, lt_save_path, lt_data_path)
     
-    image3 = Image.open(lt_save_path)
-    image3.show()
-    
-    
+    os.system(f"open '{lt_save_path}'")
+     
 
 if __name__ == "__main__":
     main()

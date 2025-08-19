@@ -152,7 +152,7 @@ def lineTension(data_path, tif_path, save_path, data_save_path):
         msg="Enter index of the 'head' of the bola, pixel size, frames per seconds, and subsurface viscosity.",
         title="Settings",
         fields=["Head Index: ", "Microns per Pixel", "Frames per Second", "Subsurface Viscosity"],
-        values= ["1", "0.2222", "20", "0.01"]
+        values= ["1", "0.222222", "20", "0.001"]
     )
     try:
         head = int(settings[0])

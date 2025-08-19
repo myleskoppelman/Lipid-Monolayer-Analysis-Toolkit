@@ -8,11 +8,14 @@ from skimage.util import img_as_ubyte
 from skimage.segmentation import clear_border
 from skimage.measure import label, regionprops
 from scipy.ndimage import binary_fill_holes
+import pandas as pd
+from skimage import io
+
 
 ''' [preProcessFile.py] Last Updated: 5/30/2025 by Myles Koppelman '''
 
 
-def preProcess(file_path, is_bin, domain_color, border, max_eccentricity, min_area, write_bin, adaptive_thresh, threshold_factor, slices, bin_save_path):
+def preProcess(file_path, is_bin, domain_color, border, max_eccentricity, min_area, adaptive_thresh, threshold_factor, slices):
     '''
     [preProcessFile.py] Last Updated: 5/30/2025 by Myles Koppelman
     
@@ -67,7 +70,10 @@ def preProcess(file_path, is_bin, domain_color, border, max_eccentricity, min_ar
     processed_frames = []
     output_data = []
     eccentricities = []
-    ne = 0  # Counter for frames with no/few domains
+    ne = 0  
+    
+    
+    
 
 
 
@@ -102,12 +108,12 @@ def preProcess(file_path, is_bin, domain_color, border, max_eccentricity, min_ar
         binary = binary_opening(binary)
         # ----------------------- Remove these for unedited binary image ---------------------------
         binary = remove_small_objects(binary, min_area) 
-        binary = binary_fill_holes(binary)
+        # binary = binary_fill_holes(binary)
         if not border:
             binary = clear_border(binary)
         # ------------------------------------------------------------------------------------------
-        if write_bin:
-            processed_frames.append(img_as_ubyte(~binary))       
+
+        processed_frames.append(img_as_ubyte(~binary))       
         # else:
         #     binary = ~im.astype(bool)
 
@@ -119,7 +125,7 @@ def preProcess(file_path, is_bin, domain_color, border, max_eccentricity, min_ar
 
         if num > 0:  # [Area, CentroidX, CentroidY, Frame#, Eccentricity, BoundingBoxX, BoundingBoxY, BoundingBoxW, BoundingBoxH]
             props = regionprops(labeled)
-            m = np.zeros((len(props), 13))
+            m = np.zeros((len(props), 14))
 
             m[:, 0] = [p.area for p in props]
             m[:, 1] = [p.centroid[1] for p in props]
@@ -138,6 +144,15 @@ def preProcess(file_path, is_bin, domain_color, border, max_eccentricity, min_ar
                 m[i, 10] = p.minor_axis_length
                 m[i, 11] = p.orientation  # In radians
                 m[i, 12] = 0 if domain_color == 0 else 255
+                
+                domain_mask = (labeled == p.label)
+
+                # Check for holes using binary_fill_holes
+                filled_mask = binary_fill_holes(domain_mask)
+                holes_exist = np.any(filled_mask & ~domain_mask)
+
+                # Store as 1 (has holes) or 0 (no holes)
+                m[i, 13] = int(holes_exist)
 
             eccentricities.extend(m[:, 4])
             output_data.extend(m.tolist())
@@ -154,14 +169,27 @@ def preProcess(file_path, is_bin, domain_color, border, max_eccentricity, min_ar
         odata = np.delete(odata, row, axis=0)
 
 
-    # Save binary output images
-    if write_bin and processed_frames:
+    if not is_bin:
+        p, filename = os.path.split(file_path)
+        nm, _ = os.path.splitext(filename)
+        bin_save_path = easygui.filesavebox(
+        msg="Save Output .tif File",
+        default=os.path.join(p, f"{nm}_BIN.tif"),
+        filetypes=["*.tif"]
+        )
+        if not bin_save_path:
+            raise Exception("No output file selected.")
+        if bin_save_path is not None and not bin_save_path.lower().endswith('.tif'):
+            bin_save_path += '.tif'
+        
         tifffile.imwrite(bin_save_path, processed_frames, dtype=np.uint8)
+        print("Threshold and Analysis Complete...")
+        return odata, file_path
+    
+    else:
+        print("Threshold and Analysis Complete...")
+        return odata, file_path
 
 
-    print("Threshold and Analysis Complete...")
-    
-    return odata
-    
-    
+
     

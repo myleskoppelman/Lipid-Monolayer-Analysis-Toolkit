@@ -63,8 +63,6 @@ def getOptions(s1, s2, s3):
     horz_slices = 4 
     vert_slices = 8
     at = False
-    write_binary_img = False
-    binary_save_path = None
     data_save_path = None
     
     
@@ -175,7 +173,7 @@ def getOptions(s1, s2, s3):
     dc = 0 if domain_color == "Dark" else 1
     
     # ---------------------------------------------------------------------------------------------------------
-    # Ask Domain Color
+    # Ask to consider domains touching the border
     # ---------------------------------------------------------------------------------------------------------
     border_ = easygui.buttonbox(
         msg="Consider Domains touching the border?",
@@ -184,6 +182,18 @@ def getOptions(s1, s2, s3):
     )
 
     border = False if border_ == "No" else True
+    
+    # ---------------------------------------------------------------------------------------------------------
+    # Ask iterative tracking
+    # ---------------------------------------------------------------------------------------------------------
+    iterative = easygui.buttonbox(
+        msg="Conduct Iterative Tracking?",
+        title="Settings",
+        choices=["Yes", "No"]
+    )
+
+    iterative_tracking = False if iterative == "No" else True
+    
     
     
     
@@ -198,13 +208,6 @@ def getOptions(s1, s2, s3):
             choices=["Normal", "Adaptive"]
         )
         
-        write_images = easygui.buttonbox(
-            msg="Write Binary Images?",
-            title="Settings",
-            choices=["Yes", "No"]
-        )
-        
-        write_binary_img = True if write_images == "Yes" else False
 
 
         # Prompt User for number of horizontal and vertical slices for adaptive threshold 
@@ -260,15 +263,8 @@ def getOptions(s1, s2, s3):
     # ---------------------------------------------------------------------------------------------------------
     #  Ask location to save files
     # ---------------------------------------------------------------------------------------------------------
-    if write_binary_img:
-        binary_save_path = easygui.filesavebox(
-            msg="Save Output .tif File",
-            default=os.path.join(p, f"{nm}_BINARY.tif"),
-            filetypes=["*.tif"]
-        )
-        if not binary_save_path:
-            raise Exception("No output file selected.")
-        
+
+   
 
     data_save_path = easygui.filesavebox(
         msg="Save Output .xlsx File",
@@ -281,8 +277,18 @@ def getOptions(s1, s2, s3):
     if data_save_path is not None and not data_save_path.lower().endswith('.xlsx'):
         data_save_path += '.xlsx'
         
-    if binary_save_path is not None and not binary_save_path.lower().endswith('.tif'):
-        binary_save_path += '.tif'
+
+    
+    tagged_tif_path = easygui.filesavebox(
+        msg="Save Output .tif File",
+        default=os.path.join(p, f"{nm}_TAGGED.tif"),
+        filetypes=["*.tif"]
+    )
+    if not tagged_tif_path:
+        raise Exception("No output file selected.")
+    
+    if tagged_tif_path is not None and not tagged_tif_path.lower().endswith('.tif'):
+        tagged_tif_path += '.tif'
 
 
 
@@ -292,6 +298,7 @@ def getOptions(s1, s2, s3):
         binary,
         dc,
         border,
+        iterative_tracking,
         max_eccentricity,
         min_area,
         max_area,
@@ -303,11 +310,11 @@ def getOptions(s1, s2, s3):
         max_areachange2,
         max_movement2,
         max_frameskip2,
-        write_binary_img,
         at,
         threshold_factor,
         (horz_slices, vert_slices),
-        binary_save_path,
-        data_save_path
+
+        data_save_path,
+        tagged_tif_path
     ]
 

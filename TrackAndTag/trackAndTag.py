@@ -12,7 +12,10 @@ from skimage.measure import label, regionprops
 from tqdm import tqdm
 import tifffile
 
-''' [trackParticles.py] Last Updated: 5/30/2025 by Myles Koppelman '''
+''' [trackAndTag.py] Last Updated: 6/17/2025 by Myles Koppelman '''
+
+
+
 
 
 def removeParticles(data, min_area, max_area, max_eccentricity):
@@ -54,17 +57,17 @@ def filterParticles(particles, max_area_variation, min_frames):
     filtered_particles = []
     
     for particle in tqdm(particles, desc="Removing Unwanted Particles..."):
-        areas = particle[:, 0]
-        mean_area = np.mean(areas)
+        # areas = particle[:, 0]
+        # mean_area = np.mean(areas)
         
-        if mean_area == 0:
-            continue  # Avoid divide-by-zero
+        # if mean_area == 0:
+        #     continue  # Avoid divide-by-zero
 
-        area_flux = np.abs(1 - (areas / mean_area))
-        particle_filtered = particle[area_flux <= max_area_variation]
+        # area_flux = np.abs(1 - (areas / mean_area))
+        # particle_filtered = particle[area_flux <= max_area_variation]
 
-        if particle_filtered.shape[0] > min_frames:
-            filtered_particles.append(particle_filtered)
+        if particle.shape[0] > min_frames:
+            filtered_particles.append(particle)
 
     if not filtered_particles:
         print("No domains found!")
@@ -293,24 +296,24 @@ def main():
     # The settings can be changed here or when running the program
 
     # These settings affect the data, not the tracking
-    min_area = 5
-    max_area = 1500
-    min_frames = 3
-    max_eccentricity = 1.0
-    max_area_variation = 1.0 # Decimal percentage only (0-whatever)
+    min_area = 500
+    max_area = 10000
+    min_frames = 30
+    max_eccentricity = 0.5
+    max_area_variation = 0.05 # Decimal percentage only (0-whatever)
 
     # These settings below will affect the tracking. Generally you want these
     # values flexible for the first track but tighten them during the
     # iteration.
     threshold_factor = 1.0 
-    max_areachange = 2 # Decimal percentage only (0-1)
+    max_areachange = 0.1 # Decimal percentage only (0-1)
     max_movement = 100
     max_frameskip = 0
 
 
     # These are for the iteration. You want to keep the allowed movement low
     # because the program already is guessing where the particle should be.
-    max_areachange2 = 2 # Percentages only
+    max_areachange2 = 0.1 # Percentages only
     max_movement2 = 50
     max_frameskip2 = 0
     # -------------------------------------------------------------------------
@@ -320,43 +323,29 @@ def main():
     s2 = [str(max_areachange), str(max_movement), str(max_frameskip)]
     s3 = [str(max_areachange2), str(max_movement2), str(max_frameskip2)]
 
-    (tif_path, 
-    binary, domain_color, border,
+    (file_path, 
+    binary, domain_color, border, iterative_tracking,
     max_eccentricity, min_area, max_area, min_frames, max_area_variation, 
     max_areachange, max_movement, max_frameskip,
     max_areachange2, max_movement2, max_frameskip2,
-    write_bin,
-    adaptive_thresh, threshold_factor, slices, 
-    bin_save_path, xlsx_save_path) = getOptions.getOptions(s1,s2,s3)
+    adaptive_thresh, threshold_factor, slices, xlsx_save_path, tagged_tif_path) = getOptions.getOptions(s1,s2,s3)
     
     
     
-    path, filename = os.path.split(tif_path)
-    name, _ = os.path.splitext(filename)
-    
-    tagged_tif_path = easygui.filesavebox(
-        msg="Save Output .tif File",
-        default=os.path.join(path, f"{name}_TAGGED.tif"),
-        filetypes=["*.tif"]
-    )
-    if not tagged_tif_path:
-        raise Exception("No output file selected.")
-    
-    if tagged_tif_path is not None and not tagged_tif_path.lower().endswith('.tif'):
-        tagged_tif_path += '.tif'
-    
-    
-    data = preProcess.preProcess(tif_path, binary, domain_color, border, max_eccentricity, min_area, write_bin, adaptive_thresh, threshold_factor, slices, bin_save_path)
+    data, tif_path = preProcess.preProcess(file_path, binary, domain_color, border, max_eccentricity, min_area, adaptive_thresh, threshold_factor, slices)
     filtered_data = removeParticles(data, min_area, max_area, max_eccentricity)
+    
+
     filtered_data_copy = filtered_data.copy()
     particles = trackParticles(filtered_data, max_areachange, max_movement, max_frameskip, None, None)
-    
-    n_frames = int(np.max(data[:,4]))
-    
-    dx, dy = averageDisplacement.average(particles, n_frames)
-    particles = trackParticles(filtered_data_copy, max_areachange2, max_movement2, max_frameskip2, dx, dy)
-    filtered_particles = filterParticles(particles, max_area_variation, min_frames)
-    
+     
+    if iterative_tracking:
+        n_frames = int(np.max(data[:,4]))
+        dx, dy = averageDisplacement.average(particles, n_frames)
+        particles_copy = trackParticles(filtered_data_copy, max_areachange2, max_movement2, max_frameskip2, dx, dy)
+        filtered_particles = filterParticles(particles_copy, max_area_variation, min_frames)
+    else:
+        filtered_particles = filterParticles(particles, max_area_variation, min_frames)
     
     _, name = os.path.split(xlsx_save_path)
  
@@ -367,11 +356,12 @@ def main():
                     "Area", "Centroid_X", "Centroid_Y", "Frame",
                     "Eccentricity", "BBox_X", "BBox_Y", "BBox_W", "BBox_H", "Major_Axis", "Minor_Axis", "Orientation", "Domain_Color"
                 ])
-                sheet_name = f"Particle_{i}"
+                sheet_name = f"Particle_{i + 1}"
                 df.to_excel(writer, sheet_name=sheet_name, index=False)
         print(f"\nSaved {len(filtered_particles)} particles to {name}")
     except IndexError:
         print("Failed to Track... No Domains found. Consider revising setting.")
+        return 
         
     
     tagged_tif_path, tracked_xlsx_path = tagParticles(xlsx_save_path, tif_path, tagged_tif_path)
