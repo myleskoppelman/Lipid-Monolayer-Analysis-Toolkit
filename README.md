@@ -33,7 +33,7 @@ pip install easygui==0.98.3 matplotlib==3.10.5
 Open Anaconda Prompt (not Command Prompt) and run:
 
 ```bash
-conda create -n domain-env python=3.12 -y
+conda create -n domain-env python=3.12
 ```
 ```bash
 conda activate domain-env
