@@ -14,8 +14,8 @@ def calculate_kinematics(df, scale=1.0, fps=1.0):
     dt = 1.0 / fps
 
     # Apply scale
-    x = df["Centroid_X"].to_numpy() * scale
-    y = df["Centroid_Y"].to_numpy() * scale
+    x = df["Centroid_X"].to_numpy()
+    y = df["Centroid_Y"].to_numpy()
 
     N = len(x)
 

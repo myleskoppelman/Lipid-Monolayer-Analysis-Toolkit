@@ -34,12 +34,17 @@ def plotData(filename, fps, scale,
             # --------- Velocity vs Time ---------
             time = df["Frame"] / fps
             velocity = df["Velocity"]
+            vx = df["Vel_X"]
+            vy = df["Vel_Y"]
 
             plt.figure(figsize=(10, 4))
             plt.plot(time, velocity, lw=0.8, color="black")
+            plt.plot(time, vx, lw=0.8, color="red")
+            plt.plot(time, vy, lw=0.8, color="blue")
             plt.xlabel("time (s)")
             plt.ylabel("velocity (µm/s)")
             plt.title(f"Velocity vs Time - {sheet_name}")
+            plt.legend(["Velocity Magnitude", "X Velocity", "Y Velocity"])
             plt.tight_layout()
             vel_pdf.savefig()
             plt.close()
@@ -104,9 +109,7 @@ def plotData(filename, fps, scale,
 
         # Jerk magnitude cumulative
         plt.figure(figsize=(8, 5))
-        plt.hist(all_jerks, bins=int(np.sqrt(len(all_jerks))),
-                 density=True, cumulative=True, histtype="step",
-                 color="black")
+        plt.hist(all_jerks, bins=int(np.sqrt(len(all_jerks))), density=True, cumulative=True, histtype="step", color="black")
         plt.xlabel("jerk magnitude (µm/s³)")
         plt.ylabel("cumulative probability")
         plt.title("Cumulative Jerk Magnitude Distribution (All Sheets)")
